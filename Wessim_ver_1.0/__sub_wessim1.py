@@ -8,6 +8,7 @@ import numpy
 from time import time
 import argparse
 import math
+import os 
 
 inds={'A':0,'T':1,'G':2,'C':3,'N':4,'a':0,'t':1,'g':2,'c':3,'n':4}
 
@@ -798,7 +799,7 @@ def H(l, n, x, u1, u2, mvnpdf):
 	return toKeep
 	
 def readmvnTable():
-	f = open("lib/mvnTable.txt")
+	f = open(os.path.dirname(os.path.abspath(__file__)) + "/lib/mvnTable.txt")
 	context = f.read()
 	lines = context.split("\n")
 	mvnTable = []

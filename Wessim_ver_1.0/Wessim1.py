@@ -1,3 +1,4 @@
+#!/usr/bin/env python2
 import sys
 import random
 import bisect
@@ -91,11 +92,13 @@ def main(argv):
 	print "-------------------------------------------"
 	print
 
+	cur_script_path = os.path.dirname(os.path.abspath(__file__))
+
 	processes = []
 	for t in range(0, threadnumber):
 		readstart = int(float(readnumber) / float(threadnumber) * t) + 1
 		readend = int(float(readnumber) / float(threadnumber) * (t+1))
-		command = "python __sub_wessim1.py " + arguline + " -1 " + str(readstart) + " -2 " + str(readend) + " -i " + str(t+1)
+		command = "python2 " + cur_script_path + "/" "__sub_wessim1.py " + arguline + " -1 " + str(readstart) + " -2 " + str(readend) + " -i " + str(t+1)
 		p = Process(target=subprogram, args=(command, t+1))
 		p.start()
 		processes.append(p)

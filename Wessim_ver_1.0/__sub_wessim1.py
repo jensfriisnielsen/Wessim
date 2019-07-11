@@ -192,9 +192,11 @@ def main(argv):
 		refLen=len(ref)
 		header = seq[0]
 		headervalues = header.split("_")
+                fragment, f_start, f_end, f_len = getFragment(ref, isize, newSD, imin)
 		fragment_chrom = headervalues[0]
-		fragment_start = int(headervalues[1])
-		fragment_end = int(headervalues[2])
+		fragment_start = int(headervalues[1]) + f_start
+		fragment_end = int(headervalues[2]) + f_end
+		fragment_len = f_len
 		if refLen<imin:
 			continue
 		gccount = getGCCount(seq)
@@ -212,7 +214,8 @@ def main(argv):
 			ln1=RL()
 			ln2=RL()
 			inter = isize
-			read1,pos1,dir1,quals1,read2,pos2,dir2,quals2 = readGenp(ref,refLen,ln1,ln2,gens(),mx1,insDict1,delDict1,gQList,bQList,iQList,qualbase)
+			read1,pos1,dir1,quals1,read2,pos2,dir2,quals2 = readGenp(fragment,f_len,ln1,ln2,gens(),mx1,insDict1,delDict1,gQList,bQList,iQList,qualbase)
+			#read1,pos1,dir1,quals1,read2,pos2,dir2,quals2 = readGenp(ref,refLen,ln1,ln2,gens(),mx1,insDict1,delDict1,gQList,bQList,iQList,qualbase)
 			p1 = fragment_chrom + "_" + str(fragment_start + pos1 + 1) + "_" + dirtag[dir1]
 			p2 = fragment_chrom + "_" + str(fragment_start + pos2 + 1) + "_" + dirtag[dir2]
 			if val > unAlign0+unAlign1:
@@ -260,12 +263,18 @@ def getSequence(ref, fragment):
 	seq = ref.fetch(chrom, start, end)
 	return seq
 
-def getFragment(matchdic, key, mu, sigma, lower, bind):
-	ins = getInsertLength(mu, sigma, lower)
-	match = matchdic[key]
-	pickedproberegion = pickproberegion(match)
-	pickedfragment = pickFragment(pickedproberegion, ins, bind)	
-	return pickedfragment
+def getFragment(ref, mu, sigma, lower):
+    reflen = len(ref)
+    lower = lower if lower < reflen else reflen
+    isize = getInsertLength(mu, sigma, lower, reflen)
+    margin = len(ref) - isize
+    if margin == 0:
+        start = 0
+    else:
+        start=random.randint(0,margin)
+    end=start+isize
+    read = ref[start:end]
+    return read, start, end, isize
 
 def getFragmentUniform(abdlist, seqlist, last, mu, total, bind):
 	result = []
@@ -285,10 +294,12 @@ def getFragmentUniform(abdlist, seqlist, last, mu, total, bind):
 		i+=1
 	return result
 
-def getInsertLength(mu, sigma, lower):
+def getInsertLength(mu, sigma, lower, higher):
+        if lower == higher:
+            return lower
 	while True:
 		length = int(random.gauss(mu, sigma))
-		if length >= lower:
+		if length >= lower and length <= higher:
 			return length
 	
 def pickproberegion(match):
@@ -480,6 +491,7 @@ def ln(length):
 	def val():
 		return length
 	return val
+
 
 def readGen1(ref,refLen,readLen,genos,inter,mx1,insD1,delD1,gQ,bQ,iQ,qual):
 	"""Generates a random read of desired length from a reference."""
